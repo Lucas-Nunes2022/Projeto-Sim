@@ -14,6 +14,8 @@ class Sons:
     porta_fechar: str = ''
     seta: str = ''
     freio_ar: str = ''
+    ventilacao: str = ''
+    catraca: str = ''
 
 @dataclass
 class Veiculo:

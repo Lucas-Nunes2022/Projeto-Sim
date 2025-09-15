@@ -9,84 +9,80 @@ APPDATA = pathlib.Path.home() / "AppData" / "Roaming" / "lucas_producoes" / "sim
 VEHICLES_DIR = APPDATA / "vehicles"
 
 class EditorFrame(wx.Frame):
-    def __init__(self, *args, dados: Veiculo, **kwargs):
+    def __init__(self, *args, dados: Veiculo, pasta: pathlib.Path | None = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.dados = dados
+        self.pasta = pasta
         panel = wx.Panel(self)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         lbl_id = wx.StaticText(panel, label="ID:")
         self.id = wx.TextCtrl(panel, value=self.dados.id)
-        self.id.SetName("ID")
 
         lbl_nome = wx.StaticText(panel, label="Nome:")
         self.nome = wx.TextCtrl(panel, value=self.dados.nome)
-        self.nome.SetName("Nome")
 
         lbl_tipo = wx.StaticText(panel, label="Tipo:")
         self.tipo = wx.ComboBox(panel, choices=["micro", "padrão", "biarticulado", "super_articulado"],
                                 style=wx.CB_READONLY, value=self.dados.tipo)
-        self.tipo.SetName("Tipo")
 
         lbl_comprimento = wx.StaticText(panel, label="Comprimento (m):")
         self.comprimento = wx.TextCtrl(panel, value=str(self.dados.comprimento_m))
-        self.comprimento.SetName("Comprimento")
 
         lbl_portas = wx.StaticText(panel, label="Portas:")
         self.portas = wx.SpinCtrl(panel, min=0, max=5, initial=self.dados.portas)
-        self.portas.SetName("Portas")
 
         lbl_capacidade = wx.StaticText(panel, label="Capacidade:")
         self.capacidade = wx.SpinCtrl(panel, min=0, max=300, initial=self.dados.capacidade)
-        self.capacidade.SetName("Capacidade")
 
         lbl_motor_posicao = wx.StaticText(panel, label="Motor - Posição:")
         self.motor_posicao = wx.ComboBox(panel, choices=["frontal", "traseiro"],
                                          style=wx.CB_READONLY, value=self.dados.motor.posicao)
-        self.motor_posicao.SetName("Motor Posição")
 
         lbl_motor_potencia = wx.StaticText(panel, label="Motor - Potência (CV):")
         self.motor_potencia = wx.SpinCtrl(panel, min=0, max=2000, initial=self.dados.motor.potencia_cv)
-        self.motor_potencia.SetName("Motor Potência")
 
         lbl_motor_combustivel = wx.StaticText(panel, label="Motor - Combustível:")
         self.motor_combustivel = wx.ComboBox(panel, choices=["diesel", "eletrico", "bateria"],
                                              style=wx.CB_READONLY, value=self.dados.motor.combustivel)
-        self.motor_combustivel.SetName("Motor Combustível")
 
         lbl_motor_vel = wx.StaticText(panel, label="Motor - Velocidade Máx (km/h):")
         self.motor_vel = wx.SpinCtrl(panel, min=0, max=200, initial=self.dados.motor.velocidade_max_kmh)
-        self.motor_vel.SetName("Motor Velocidade Máxima")
 
         lbl_som_motor = wx.StaticText(panel, label="Som Motor:")
-        self.som_motor = wx.TextCtrl(panel, value=self.dados.sons.motor)
-        self.som_motor.SetName("Som Motor")
+        self.som_motor = wx.TextCtrl(panel, value=self._resolve_path(self.dados.sons.motor))
         btn_motor = wx.Button(panel, label="Selecionar Som Motor")
         btn_motor.Bind(wx.EVT_BUTTON, lambda evt: self.escolher_arquivo(self.som_motor))
 
         lbl_som_porta_abrir = wx.StaticText(panel, label="Som Porta Abrir:")
-        self.som_porta_abrir = wx.TextCtrl(panel, value=self.dados.sons.porta_abrir)
-        self.som_porta_abrir.SetName("Som Porta Abrir")
+        self.som_porta_abrir = wx.TextCtrl(panel, value=self._resolve_path(self.dados.sons.porta_abrir))
         btn_porta_abrir = wx.Button(panel, label="Selecionar Som Porta Abrir")
         btn_porta_abrir.Bind(wx.EVT_BUTTON, lambda evt: self.escolher_arquivo(self.som_porta_abrir))
 
         lbl_som_porta_fechar = wx.StaticText(panel, label="Som Porta Fechar:")
-        self.som_porta_fechar = wx.TextCtrl(panel, value=self.dados.sons.porta_fechar)
-        self.som_porta_fechar.SetName("Som Porta Fechar")
+        self.som_porta_fechar = wx.TextCtrl(panel, value=self._resolve_path(self.dados.sons.porta_fechar))
         btn_porta_fechar = wx.Button(panel, label="Selecionar Som Porta Fechar")
         btn_porta_fechar.Bind(wx.EVT_BUTTON, lambda evt: self.escolher_arquivo(self.som_porta_fechar))
 
         lbl_som_seta = wx.StaticText(panel, label="Som Seta:")
-        self.som_seta = wx.TextCtrl(panel, value=self.dados.sons.seta)
-        self.som_seta.SetName("Som Seta")
+        self.som_seta = wx.TextCtrl(panel, value=self._resolve_path(self.dados.sons.seta))
         btn_seta = wx.Button(panel, label="Selecionar Som Seta")
         btn_seta.Bind(wx.EVT_BUTTON, lambda evt: self.escolher_arquivo(self.som_seta))
 
         lbl_som_freio_ar = wx.StaticText(panel, label="Som Freio Ar:")
-        self.som_freio_ar = wx.TextCtrl(panel, value=self.dados.sons.freio_ar)
-        self.som_freio_ar.SetName("Som Freio Ar")
+        self.som_freio_ar = wx.TextCtrl(panel, value=self._resolve_path(self.dados.sons.freio_ar))
         btn_freio_ar = wx.Button(panel, label="Selecionar Som Freio Ar")
         btn_freio_ar.Bind(wx.EVT_BUTTON, lambda evt: self.escolher_arquivo(self.som_freio_ar))
+
+        lbl_som_ventilacao = wx.StaticText(panel, label="Som Ventilação:")
+        self.som_ventilacao = wx.TextCtrl(panel, value=self._resolve_path(self.dados.sons.ventilacao))
+        btn_ventilacao = wx.Button(panel, label="Selecionar Som Ventilação")
+        btn_ventilacao.Bind(wx.EVT_BUTTON, lambda evt: self.escolher_arquivo(self.som_ventilacao))
+
+        lbl_som_catraca = wx.StaticText(panel, label="Som Catraca:")
+        self.som_catraca = wx.TextCtrl(panel, value=self._resolve_path(self.dados.sons.catraca))
+        btn_catraca = wx.Button(panel, label="Selecionar Som Catraca")
+        btn_catraca.Bind(wx.EVT_BUTTON, lambda evt: self.escolher_arquivo(self.som_catraca))
 
         salvar_btn = wx.Button(panel, label="Salvar")
         salvar_btn.Bind(wx.EVT_BUTTON, self.salvar)
@@ -107,12 +103,20 @@ class EditorFrame(wx.Frame):
             lbl_som_porta_fechar, self.som_porta_fechar, btn_porta_fechar,
             lbl_som_seta, self.som_seta, btn_seta,
             lbl_som_freio_ar, self.som_freio_ar, btn_freio_ar,
+            lbl_som_ventilacao, self.som_ventilacao, btn_ventilacao,
+            lbl_som_catraca, self.som_catraca, btn_catraca,
             salvar_btn
         ]:
             sizer.Add(w, 0, wx.EXPAND | wx.ALL, 5)
 
         panel.SetSizer(sizer)
-        self.SetSize((500, 850))
+        self.SetSize((500, 1000))
+
+    def _resolve_path(self, filename: str) -> str:
+        if not filename or not self.pasta:
+            return filename or ""
+        pasta_sons = self.pasta / "sounds"
+        return str(pasta_sons / filename) if filename else ""
 
     def escolher_arquivo(self, ctrl):
         with wx.FileDialog(None, "Escolha um som", wildcard="Arquivos WAV (*.wav)|*.wav",
@@ -143,7 +147,9 @@ class EditorFrame(wx.Frame):
                 porta_abrir=pathlib.Path(self.som_porta_abrir.GetValue()).name if self.som_porta_abrir.GetValue() else "",
                 porta_fechar=pathlib.Path(self.som_porta_fechar.GetValue()).name if self.som_porta_fechar.GetValue() else "",
                 seta=pathlib.Path(self.som_seta.GetValue()).name if self.som_seta.GetValue() else "",
-                freio_ar=pathlib.Path(self.som_freio_ar.GetValue()).name if self.som_freio_ar.GetValue() else ""
+                freio_ar=pathlib.Path(self.som_freio_ar.GetValue()).name if self.som_freio_ar.GetValue() else "",
+                ventilacao=pathlib.Path(self.som_ventilacao.GetValue()).name if self.som_ventilacao.GetValue() else "",
+                catraca=pathlib.Path(self.som_catraca.GetValue()).name if self.som_catraca.GetValue() else ""
             )
         )
 
@@ -163,6 +169,8 @@ class EditorFrame(wx.Frame):
             (self.som_porta_fechar.GetValue(), pasta_sons / v.sons.porta_fechar),
             (self.som_seta.GetValue(), pasta_sons / v.sons.seta),
             (self.som_freio_ar.GetValue(), pasta_sons / v.sons.freio_ar),
+            (self.som_ventilacao.GetValue(), pasta_sons / v.sons.ventilacao),
+            (self.som_catraca.GetValue(), pasta_sons / v.sons.catraca),
         ]:
             if src and pathlib.Path(src).exists():
                 pathlib.Path(dest).write_bytes(pathlib.Path(src).read_bytes())

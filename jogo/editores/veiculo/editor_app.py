@@ -12,14 +12,14 @@ VEHICLES_DIR = APPDATA / "vehicles"
 class Editor(wx.App):
     def OnInit(self):
         choices = ("Criar novo veículo", "Editar veículo existente")
-        dlg = wx.SingleChoiceDialog(None, "Escolha uma opção:", "Editor de Veículos", choices)
+        dlg = wx.SingleChoiceDialog(None, "Escolha uma opção:", f"Editor de Veículos v{constantes.versao}", choices)
         action = None
         if dlg.ShowModal() == wx.ID_OK:
             action = dlg.GetStringSelection()
         dlg.Destroy()
 
         if action == "Criar novo veículo":
-            frame = EditorFrame(None, title="Criar veículo", dados=Veiculo())
+            frame = EditorFrame(None, title=f"Criar veículo - Editor de Veículos v{constantes.versao}", dados=Veiculo(), pasta=None)
 
         elif action == "Editar veículo existente":
             with wx.DirDialog(None, "Escolha a pasta do veículo",
@@ -54,7 +54,9 @@ class Editor(wx.App):
                     if v.sons.porta_fechar: v.sons.porta_fechar = str(pasta_sons / v.sons.porta_fechar)
                     if v.sons.seta: v.sons.seta = str(pasta_sons / v.sons.seta)
                     if v.sons.freio_ar: v.sons.freio_ar = str(pasta_sons / v.sons.freio_ar)
-                frame = EditorFrame(None, title=f"Editar {v.nome}", dados=v)
+                    if v.sons.ventilacao: v.sons.ventilacao = str(pasta_sons / v.sons.ventilacao)
+                    if v.sons.catraca: v.sons.catraca = str(pasta_sons / v.sons.catraca)
+                frame = EditorFrame(None, title=f"Editar {v.nome} - Editor de Veículos v{constantes.versao}", dados=v, pasta=pasta)
         else:
             return False
 
