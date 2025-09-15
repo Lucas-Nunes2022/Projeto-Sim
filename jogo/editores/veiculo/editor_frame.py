@@ -24,7 +24,7 @@ class EditorFrame(wx.Frame):
         self.nome.SetName("Nome")
 
         lbl_tipo = wx.StaticText(panel, label="Tipo:")
-        self.tipo = wx.ComboBox(panel, choices=["micro", "padrao", "biarticulado", "super_articulado"],
+        self.tipo = wx.ComboBox(panel, choices=["micro", "padrão", "biarticulado", "super_articulado"],
                                 style=wx.CB_READONLY, value=self.dados.tipo)
         self.tipo.SetName("Tipo")
 
