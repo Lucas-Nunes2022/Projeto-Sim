@@ -40,22 +40,28 @@ class Editor(wx.App):
                 v = Veiculo(
                     id=d.get("id",""),
                     nome=d.get("nome",""),
+                    fabricante=d.get("fabricante",""),
+                    ano=d.get("ano",0),
                     tipo=d.get("tipo",""),
+                    cambio=d.get("cambio",""),
+                    qtd_marchas=d.get("qtd_marchas",0),
                     comprimento_m=d.get("comprimento_m",0),
                     portas=d.get("portas",0),
                     capacidade=d.get("capacidade",0),
+                    peso=d.get("peso",0),
+                    altura=d.get("altura",0),
+                    largura=d.get("largura",0),
+                    cap_tanque=d.get("cap_tanque",0),
+                    qtd_eixos=d.get("qtd_eixos",0),
                     motor=Motor(**d.get("motor",{})),
                     sons=Sons(**d.get("sons",{}))
                 )
                 pasta_sons = pasta / "sounds"
                 if pasta_sons.exists():
-                    if v.sons.motor: v.sons.motor = str(pasta_sons / v.sons.motor)
-                    if v.sons.porta_abrir: v.sons.porta_abrir = str(pasta_sons / v.sons.porta_abrir)
-                    if v.sons.porta_fechar: v.sons.porta_fechar = str(pasta_sons / v.sons.porta_fechar)
-                    if v.sons.seta: v.sons.seta = str(pasta_sons / v.sons.seta)
-                    if v.sons.freio_ar: v.sons.freio_ar = str(pasta_sons / v.sons.freio_ar)
-                    if v.sons.ventilacao: v.sons.ventilacao = str(pasta_sons / v.sons.ventilacao)
-                    if v.sons.catraca: v.sons.catraca = str(pasta_sons / v.sons.catraca)
+                    for attr, val in v.sons.__dict__.items():
+                        if val:
+                            setattr(v.sons, attr, str(pasta_sons / val))
+
                 frame = EditorFrame(None, title=f"Editar {v.nome} - Editor de Veículos v{constantes.versao}", dados=v, pasta=pasta)
         else:
             return False
