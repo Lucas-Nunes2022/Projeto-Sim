@@ -13,6 +13,11 @@ class Editor(wx.App):
     def OnInit(self):
         choices = ("Criar novo veículo", "Editar veículo existente")
         dlg = wx.SingleChoiceDialog(None, "Escolha uma opção:", f"Editor de Veículos v{constantes.versao}", choices)
+
+        cancel_btn = dlg.FindWindowById(wx.ID_CANCEL)
+        if cancel_btn:
+            cancel_btn.SetLabel("Cancelar")
+
         action = None
         if dlg.ShowModal() == wx.ID_OK:
             action = dlg.GetStringSelection()

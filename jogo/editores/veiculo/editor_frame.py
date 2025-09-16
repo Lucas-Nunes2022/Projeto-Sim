@@ -13,8 +13,8 @@ LABEL_SONS = {
     "start": "Som de Partida",
     "buzina": "Som da Buzina",
     "motor_ext": "Som do Motor Externo",
-    "porta_abrir": "Som Abrir Porta",
-    "porta_fechar": "Som Fechar Porta",
+    "porta_abrir": "Som de abertura das portas",
+    "porta_fechar": "Som de fechamento das portas",
     "seta": "Som da Seta",
     "freio_ar": "Som do Freio a Ar",
     "freio_emergencia": "Som do Freio de Emergência",
@@ -62,8 +62,8 @@ class EditorFrame(wx.Frame):
             ("Capacidade do Tanque (L):", wx.SpinCtrl, {"min": 0, "max": 2000, "initial": self.dados.cap_tanque}, "cap_tanque"),
             ("Quantidade de Eixos:", wx.SpinCtrl, {"min": 0, "max": 10, "initial": self.dados.qtd_eixos}, "qtd_eixos"),
             ("Posição do Motor:", wx.ComboBox, {"choices": ["Frontal", "Traseiro"], "style": wx.CB_READONLY, "value": self.dados.motor.posicao}, "motor_posicao"),
-            ("Potência do Motor (CV):", wx.SpinCtrl, {"min": 0, "max": 2000, "initial": self.dados.motor.potencia_cv}, "motor_potencia"),
-            ("Combustível do Motor:", wx.ComboBox, {"choices": ["Diesel", "Elétrico", "Bateria"], "style": wx.CB_READONLY, "value": self.dados.motor.combustivel}, "motor_combustivel"),
+            ("Potência do Motor (Cavalos):", wx.SpinCtrl, {"min": 0, "max": 2000, "initial": self.dados.motor.potencia_cv}, "motor_potencia"),
+            ("Tipo do Motor:", wx.ComboBox, {"choices": ["Diesel", "Elétrico", "Bateria"], "style": wx.CB_READONLY, "value": self.dados.motor.combustivel}, "motor_combustivel"),
             ("Velocidade Máxima (km/h):", wx.SpinCtrl, {"min": 0, "max": 200, "initial": self.dados.motor.velocidade_max_kmh}, "motor_vel"),
             ("Torque do Motor (Nm):", wx.SpinCtrl, {"min": 0, "max": 5000, "initial": self.dados.motor.torque}, "motor_torque"),
             ("Consumo Médio (L/km):", wx.TextCtrl, {"value": str(self.dados.motor.t_consumo)}, "motor_consumo")
@@ -74,6 +74,15 @@ class EditorFrame(wx.Frame):
             setattr(self, attr, ctrl)
             sizer1.Add(lbl, 0, wx.EXPAND | wx.ALL, 5)
             sizer1.Add(ctrl, 0, wx.EXPAND | wx.ALL, 5)
+
+        sizer_footer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_footer.AddStretchSpacer(1)
+        btn_proximo = wx.Button(self.page1, label="&Próximo")
+        btn_proximo.Bind(wx.EVT_BUTTON, lambda evt: self.notebook.SetSelection(1))
+        sizer_footer.Add(btn_proximo, 0, wx.ALL, 5)
+        sizer1.AddStretchSpacer(1)
+        sizer1.Add(sizer_footer, 0, wx.EXPAND | wx.ALL, 5)
+
         self.page1.SetSizer(sizer1)
 
     def build_page2(self):
@@ -88,12 +97,22 @@ class EditorFrame(wx.Frame):
             sizer2.Add(lbl, 0, wx.EXPAND | wx.ALL, 5)
             sizer2.Add(ctrl, 0, wx.EXPAND | wx.ALL, 5)
             sizer2.Add(btn, 0, wx.EXPAND | wx.ALL, 5)
-        btn_salvar = wx.Button(self.page2, label="Salvar")
+
+        sizer_footer = wx.BoxSizer(wx.HORIZONTAL)
+        btn_voltar = wx.Button(self.page2, label="&Voltar")
+        btn_voltar.Bind(wx.EVT_BUTTON, lambda evt: self.notebook.SetSelection(0))
+        sizer_footer.Add(btn_voltar, 0, wx.ALL, 5)
+        sizer_footer.AddStretchSpacer(1)
+        btn_salvar = wx.Button(self.page2, label="&Salvar")
         btn_salvar.Bind(wx.EVT_BUTTON, self.salvar)
-        btn_cancelar2 = wx.Button(self.page2, label="Cancelar")
+        sizer_footer.Add(btn_salvar, 0, wx.ALL, 5)
+        btn_cancelar2 = wx.Button(self.page2, label="&Cancelar")
         btn_cancelar2.Bind(wx.EVT_BUTTON, lambda evt: self.Close())
-        sizer2.Add(btn_salvar, 0, wx.EXPAND | wx.ALL, 5)
-        sizer2.Add(btn_cancelar2, 0, wx.EXPAND | wx.ALL, 5)
+        sizer_footer.Add(btn_cancelar2, 0, wx.ALL, 5)
+
+        sizer2.AddStretchSpacer(1)
+        sizer2.Add(sizer_footer, 0, wx.EXPAND | wx.ALL, 5)
+
         self.page2.SetSizer(sizer2)
 
     def _resolve_path(self, filename: str) -> str:
