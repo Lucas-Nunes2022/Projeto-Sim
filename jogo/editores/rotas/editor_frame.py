@@ -76,6 +76,7 @@ class EditorRotaFrame(wx.Frame):
         self.rua_esq_elem = wx.TextCtrl(self.page2)
         self.tipo_semaforo_elem = wx.ComboBox(self.page2, choices=["Veicular", "Pedestre", "Inteligente"], style=wx.CB_READONLY)
         self.rua_principal = wx.ComboBox(self.page2, choices=["Direita", "Esquerda", "Reto"], style=wx.CB_READONLY)
+        self.lim_vel_elem = wx.TextCtrl(self.page2)
         pairs = [
             ("Tipo do Elemento:", "tipo_elem", self.tipo_elem),
             ("Nome (Rua/Parada):", "nome_elem", self.nome_elem),
@@ -86,6 +87,7 @@ class EditorRotaFrame(wx.Frame):
             ("Rua à Direita:", "rua_dir_elem", self.rua_dir_elem),
             ("Rua à Esquerda:", "rua_esq_elem", self.rua_esq_elem),
             ("Tipo de Semáforo:", "tipo_semaforo_elem", self.tipo_semaforo_elem),
+            ("Limite de velocidade (km/h):", "lim_vel_elem", self.lim_vel_elem),
         ]
         self.labels_page2 = {}
         self.controls_page2 = {}
@@ -122,13 +124,13 @@ class EditorRotaFrame(wx.Frame):
         tipo = self.tipo_elem.GetValue()
         show = ["tipo_elem", "dist_elem"]
         if tipo == "Rua":
-            show += ["nome_elem", "superficie_elem"]
+            show += ["nome_elem", "superficie_elem", "lim_vel_elem"]
             self.controls_page2["nome_elem"].SetAccessible(LabelAccessible("Nome da Rua"))
         if tipo == "Parada":
             show += ["nome_elem"]
             self.controls_page2["nome_elem"].SetAccessible(LabelAccessible("Nome da Parada"))
         if tipo == "Curva":
-            show += ["direcao_elem", "angulacao_elem", "superficie_elem"]
+            show += ["direcao_elem", "angulacao_elem", "superficie_elem", "lim_vel_elem"]
         if tipo == "Esquina":
             show += ["rua_dir_elem", "rua_esq_elem"]
         if tipo == "Semáforo":
@@ -175,7 +177,8 @@ class EditorRotaFrame(wx.Frame):
         if e.tipo == "Rua":
             base = f"Rua {e.nome}" if e.nome else "Rua"
             sup = f" ({e.superficie})" if e.superficie else ""
-            return f"{base}{sup} - {d}"
+            vel = f" - {e.lim_velocidade} km/h" if getattr(e, 'lim_velocidade', 0) else ""
+            return f"{base}{sup} - {d}{vel}"
         if e.tipo == "Parada":
             base = f"Parada {e.nome}" if e.nome else "Parada"
             return f"{base} - {d}"
@@ -183,7 +186,8 @@ class EditorRotaFrame(wx.Frame):
             dir_ = f" {e.direcao}" if e.direcao else ""
             ang = f" {e.angulacao:g}°" if e.angulacao else ""
             sup = f" ({e.superficie})" if e.superficie else ""
-            return f"Curva{dir_}{ang}{sup} - {d}"
+            vel = f" - {e.lim_velocidade} km/h" if getattr(e, 'lim_velocidade', 0) else ""
+            return f"Curva{dir_}{ang}{sup} - {d}{vel}"
         if e.tipo == "Semáforo":
             t = f" {e.tipo_semaforo}" if e.tipo_semaforo else ""
             return f"Semáforo{t} - {d}"
@@ -209,7 +213,8 @@ class EditorRotaFrame(wx.Frame):
             angulacao=float(self.angulacao_elem.GetValue() or 0),
             rua_direita=self.rua_dir_elem.GetValue(),
             rua_esquerda=self.rua_esq_elem.GetValue(),
-            tipo_semaforo=self.tipo_semaforo_elem.GetValue()
+            tipo_semaforo=self.tipo_semaforo_elem.GetValue(),
+            lim_velocidade=float(self.lim_vel_elem.GetValue() or 0) if tipo in ("Rua", "Curva") else 0
         )
         if tipo == "Esquina":
             if not self.rua_principal.GetValue():
@@ -233,6 +238,7 @@ class EditorRotaFrame(wx.Frame):
         self.rua_dir_elem.SetValue(elem.rua_direita)
         self.rua_esq_elem.SetValue(elem.rua_esquerda)
         self.tipo_semaforo_elem.SetValue(elem.tipo_semaforo)
+        self.lim_vel_elem.SetValue(str(getattr(elem, "lim_velocidade", 0)))
         if getattr(elem, "tipo", "") == "Esquina" and hasattr(elem, "rua_principal"):
             self.rua_principal.SetValue(elem.rua_principal)
         self.dados.elementos.pop(idx)

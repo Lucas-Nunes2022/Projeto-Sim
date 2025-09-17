@@ -13,6 +13,7 @@ class Elemento:
     rua_esquerda: str = ''
     tipo_semaforo: str = ''
     rua_principal: str = ''
+    lim_velocidade: int = 0
 
 @dataclass
 class Rota:
