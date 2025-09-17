@@ -12,7 +12,7 @@ class Elemento:
     rua_direita: str = ''
     rua_esquerda: str = ''
     tipo_semaforo: str = ''
-    rua_principal: str = ''   # "Direita" ou "Esquerda"
+    rua_principal: str = ''
 
 @dataclass
 class Rota:

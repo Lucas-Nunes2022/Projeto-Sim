@@ -39,26 +39,26 @@ class EditorRotaFrame(wx.Frame):
     def build_page1(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
         campos = [
-            ("&ID da Rota:", wx.TextCtrl, {"value": self.dados.id_rota}, "id_rota"),
-            ("&Nome da Rota:", wx.TextCtrl, {"value": self.dados.nome_rota}, "nome_rota"),
-            ("&Operador:", wx.TextCtrl, {"value": self.dados.operador}, "operador"),
-            ("Tipo de &Via:", wx.ComboBox, {"choices": ["Urbana", "Rodovia"], "style": wx.CB_READONLY, "value": self.dados.tipo_via}, "tipo_via"),
-            ("Tipo de &Rota:", wx.ComboBox, {"choices": ["Municipal", "Intermunicipal", "Circular"], "style": wx.CB_READONLY, "value": self.dados.tipo_rota}, "tipo_rota"),
-            ("Ponto &Inicial:", wx.TextCtrl, {"value": self.dados.ponto_inicial}, "ponto_inicial"),
-            ("Ponto &Final:", wx.TextCtrl, {"value": self.dados.ponto_final}, "ponto_final"),
-            ("Distância total (&km):", wx.TextCtrl, {"value": str(self.dados.distancia_p0_pf)}, "distancia"),
-            ("Tempo &Estimado (min):", wx.SpinCtrl, {"min": 0, "max": 600, "initial": self.dados.tmp_estimado}, "tmp_estimado"),
-            ("&Intervalo (min):", wx.SpinCtrl, {"min": 0, "max": 120, "initial": self.dados.intervalo_min}, "intervalo_min"),
+            ("ID da Rota:", wx.TextCtrl, {"value": self.dados.id_rota}, "id_rota"),
+            ("Nome da Rota:", wx.TextCtrl, {"value": self.dados.nome_rota}, "nome_rota"),
+            ("Operador:", wx.TextCtrl, {"value": self.dados.operador}, "operador"),
+            ("Tipo de Via:", wx.ComboBox, {"choices": ["Urbana", "Rodovia"], "style": wx.CB_READONLY, "value": self.dados.tipo_via}, "tipo_via"),
+            ("Tipo de Rota:", wx.ComboBox, {"choices": ["Municipal", "Intermunicipal", "Circular"], "style": wx.CB_READONLY, "value": self.dados.tipo_rota}, "tipo_rota"),
+            ("Ponto Inicial:", wx.TextCtrl, {"value": self.dados.ponto_inicial}, "ponto_inicial"),
+            ("Ponto Final:", wx.TextCtrl, {"value": self.dados.ponto_final}, "ponto_final"),
+            ("Distância total (km):", wx.TextCtrl, {"value": str(self.dados.distancia_p0_pf)}, "distancia"),
+            ("Tempo Estimado (min):", wx.SpinCtrl, {"min": 0, "max": 600, "initial": self.dados.tmp_estimado}, "tmp_estimado"),
+            ("Intervalo (min):", wx.SpinCtrl, {"min": 0, "max": 120, "initial": self.dados.intervalo_min}, "intervalo_min"),
         ]
         for label, widget, kwargs, attr in campos:
             lbl = wx.StaticText(self.page1, label=label)
             ctrl = widget(self.page1, **kwargs)
-            label_text = label.replace("&", "").rstrip(":")
+            label_text = label.rstrip(":")
             ctrl.SetAccessible(LabelAccessible(label_text))
             setattr(self, attr, ctrl)
             sizer.Add(lbl, 0, wx.ALL, 5)
             sizer.Add(ctrl, 0, wx.EXPAND | wx.ALL, 5)
-        btn_proximo = wx.Button(self.page1, label="Pró&ximo")
+        btn_proximo = wx.Button(self.page1, label="&Próximo")
         btn_proximo.Bind(wx.EVT_BUTTON, lambda evt: self.notebook.SetSelection(1))
         sizer.AddStretchSpacer(1)
         sizer.Add(btn_proximo, 0, wx.ALIGN_RIGHT | wx.ALL, 5)
@@ -75,23 +75,23 @@ class EditorRotaFrame(wx.Frame):
         self.rua_dir_elem = wx.TextCtrl(self.page2)
         self.rua_esq_elem = wx.TextCtrl(self.page2)
         self.tipo_semaforo_elem = wx.ComboBox(self.page2, choices=["Veicular", "Pedestre", "Inteligente"], style=wx.CB_READONLY)
-        self.rua_principal = wx.ComboBox(self.page2, choices=["Direita", "Esquerda"], style=wx.CB_READONLY)
+        self.rua_principal = wx.ComboBox(self.page2, choices=["Direita", "Esquerda", "Reto"], style=wx.CB_READONLY)
         pairs = [
-            ("Tipo do &Elemento:", "tipo_elem", self.tipo_elem),
-            ("&Nome (Rua/Parada):", "nome_elem", self.nome_elem),
-            ("&Superfície:", "superficie_elem", self.superficie_elem),
-            ("Distância de &P0 (km):", "dist_elem", self.dist_elem),
-            ("&Direção da curva:", "direcao_elem", self.direcao_elem),
-            ("Âng&ulo da curva (graus):", "angulacao_elem", self.angulacao_elem),
-            ("Rua à &Direita:", "rua_dir_elem", self.rua_dir_elem),
-            ("Rua à &Esquerda:", "rua_esq_elem", self.rua_esq_elem),
-            ("Tipo de &Semáforo:", "tipo_semaforo_elem", self.tipo_semaforo_elem),
+            ("Tipo do Elemento:", "tipo_elem", self.tipo_elem),
+            ("Nome (Rua/Parada):", "nome_elem", self.nome_elem),
+            ("Superfície:", "superficie_elem", self.superficie_elem),
+            ("Distância de P0 (km):", "dist_elem", self.dist_elem),
+            ("Direção da curva:", "direcao_elem", self.direcao_elem),
+            ("Ângulo da curva (graus):", "angulacao_elem", self.angulacao_elem),
+            ("Rua à Direita:", "rua_dir_elem", self.rua_dir_elem),
+            ("Rua à Esquerda:", "rua_esq_elem", self.rua_esq_elem),
+            ("Tipo de Semáforo:", "tipo_semaforo_elem", self.tipo_semaforo_elem),
         ]
         self.labels_page2 = {}
         self.controls_page2 = {}
         for text, key, ctrl in pairs:
             lbl = wx.StaticText(self.page2, label=text)
-            label_text = text.replace("&", "").rstrip(":")
+            label_text = text.rstrip(":")
             ctrl.SetAccessible(LabelAccessible(label_text))
             self.labels_page2[key] = lbl
             self.controls_page2[key] = ctrl
@@ -100,17 +100,17 @@ class EditorRotaFrame(wx.Frame):
         self.rua_principal.SetAccessible(LabelAccessible("Rota segue por"))
         sizer.Add(self.rua_principal, 0, wx.ALL | wx.EXPAND, 5)
         self.tipo_elem.Bind(wx.EVT_COMBOBOX, self.on_tipo_elem_changed)
-        btn_add_elem = wx.Button(self.page2, label="&Adicionar Elemento")
+        btn_add_elem = wx.Button(self.page2, label="Adicionar Elemento")
         btn_add_elem.Bind(wx.EVT_BUTTON, self.add_elemento)
         sizer.Add(btn_add_elem, 0, wx.ALL, 5)
-        btn_edit_elem = wx.Button(self.page2, label="&Editar Selecionado")
-        btn_edit_elem.Bind(wx.EVT_BUTTON, self.edit_elemento)
-        sizer.Add(btn_edit_elem, 0, wx.ALL, 5)
-        btn_remove_elem = wx.Button(self.page2, label="&Remover Selecionado")
-        btn_remove_elem.Bind(wx.EVT_BUTTON, self.remove_elemento)
-        sizer.Add(btn_remove_elem, 0, wx.ALL, 5)
         self.lista_elementos = wx.ListBox(self.page2, choices=[self._format_elem(e) for e in self.dados.elementos])
         sizer.Add(self.lista_elementos, 1, wx.EXPAND | wx.ALL, 5)
+        btn_edit_elem = wx.Button(self.page2, label="Editar")
+        btn_edit_elem.Bind(wx.EVT_BUTTON, self.edit_elemento)
+        sizer.Add(btn_edit_elem, 0, wx.ALL, 5)
+        btn_remove_elem = wx.Button(self.page2, label="Remover")
+        btn_remove_elem.Bind(wx.EVT_BUTTON, self.remove_elemento)
+        sizer.Add(btn_remove_elem, 0, wx.ALL, 5)
         self.page2.SetSizer(sizer)
         self.on_tipo_elem_changed(None)
 
@@ -144,7 +144,7 @@ class EditorRotaFrame(wx.Frame):
         sizer = wx.BoxSizer(wx.VERTICAL)
         self.lista_veiculos = wx.ListBox(self.page3, choices=self._carregar_veiculos())
         sizer.Add(self.lista_veiculos, 1, wx.EXPAND | wx.ALL, 5)
-        btn_add = wx.Button(self.page3, label="&Adicionar à rota")
+        btn_add = wx.Button(self.page3, label="Adicionar à rota")
         btn_add.Bind(wx.EVT_BUTTON, self.add_veiculo)
         sizer.Add(btn_add, 0, wx.ALL, 5)
         btn_salvar = wx.Button(self.page3, label="&Salvar Rota")
