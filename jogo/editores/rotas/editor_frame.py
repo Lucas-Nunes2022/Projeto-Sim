@@ -4,6 +4,7 @@ import json
 from cryptography.fernet import Fernet
 from models import Rota, Elemento
 import constantes
+import client
 
 APPDATA = pathlib.Path.home() / "AppData" / "Roaming" / "lucas_producoes" / "simbus"
 ROUTES_DIR = APPDATA / "routes"
@@ -113,6 +114,17 @@ class EditorRotaFrame(wx.Frame):
         btn_remove_elem = wx.Button(self.page2, label="Remover")
         btn_remove_elem.Bind(wx.EVT_BUTTON, self.remove_elemento)
         sizer.Add(btn_remove_elem, 0, wx.ALL, 5)
+
+        nav_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        btn_anterior = wx.Button(self.page2, label="&Anterior")
+        btn_anterior.Bind(wx.EVT_BUTTON, lambda evt: self.notebook.SetSelection(0))
+        nav_sizer.Add(btn_anterior, 0, wx.ALL, 5)
+        btn_proximo = wx.Button(self.page2, label="&Próximo")
+        btn_proximo.Bind(wx.EVT_BUTTON, lambda evt: self.notebook.SetSelection(2))
+        nav_sizer.Add(btn_proximo, 0, wx.ALL, 5)
+        sizer.AddStretchSpacer(1)
+        sizer.Add(nav_sizer, 0, wx.ALIGN_RIGHT)
+
         self.page2.SetSizer(sizer)
         self.on_tipo_elem_changed(None)
 
@@ -144,11 +156,20 @@ class EditorRotaFrame(wx.Frame):
 
     def build_page3(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
-        self.lista_veiculos = wx.ListBox(self.page3, choices=self._carregar_veiculos())
-        sizer.Add(self.lista_veiculos, 1, wx.EXPAND | wx.ALL, 5)
+        lbl_disp = wx.StaticText(self.page3, label="Veículos disponíveis:")
+        self.lista_disponiveis = wx.ListBox(self.page3, choices=self._carregar_veiculos())
+        sizer.Add(lbl_disp, 0, wx.ALL, 5)
+        sizer.Add(self.lista_disponiveis, 1, wx.EXPAND | wx.ALL, 5)
         btn_add = wx.Button(self.page3, label="Adicionar à rota")
         btn_add.Bind(wx.EVT_BUTTON, self.add_veiculo)
         sizer.Add(btn_add, 0, wx.ALL, 5)
+        lbl_add = wx.StaticText(self.page3, label="Veículos adicionados à rota:")
+        self.lista_adicionados = wx.ListBox(self.page3, choices=self.dados.veiculos)
+        sizer.Add(lbl_add, 0, wx.ALL, 5)
+        sizer.Add(self.lista_adicionados, 1, wx.EXPAND | wx.ALL, 5)
+        btn_remove = wx.Button(self.page3, label="Remover da rota")
+        btn_remove.Bind(wx.EVT_BUTTON, self.remove_veiculo)
+        sizer.Add(btn_remove, 0, wx.ALL, 5)
         btn_salvar = wx.Button(self.page3, label="&Salvar Rota")
         btn_salvar.Bind(wx.EVT_BUTTON, self.salvar)
         sizer.Add(btn_salvar, 0, wx.ALL, 5)
@@ -167,10 +188,22 @@ class EditorRotaFrame(wx.Frame):
         return disponiveis
 
     def add_veiculo(self, event):
-        selecionado = self.lista_veiculos.GetStringSelection()
+        selecionado = self.lista_disponiveis.GetStringSelection()
         if selecionado and selecionado not in self.dados.veiculos:
             self.dados.veiculos.append(selecionado)
+            self.lista_adicionados.Append(selecionado)
             wx.MessageBox(f"Veículo {selecionado} adicionado à rota!", "Sucesso")
+
+    def remove_veiculo(self, event):
+        idx = self.lista_adicionados.GetSelection()
+        if idx != wx.NOT_FOUND:
+            veic = self.lista_adicionados.GetString(idx)
+            self.lista_adicionados.Delete(idx)
+            if veic in self.dados.veiculos:
+                self.dados.veiculos.remove(veic)
+            wx.MessageBox(f"Veículo {veic} removido da rota!", "Sucesso")
+        else:
+            wx.MessageBox("Selecione um veículo adicionado para remover.", "Erro")
 
     def _format_elem(self, e: Elemento) -> str:
         d = f"{e.distancia_p0} km"
@@ -273,6 +306,26 @@ class EditorRotaFrame(wx.Frame):
         dados_enc = fernet.encrypt(dados_json.encode()).decode()
         arquivo_rou.write_text(dados_enc, encoding="utf-8")
         wx.MessageBox(f"Rota salva em {arquivo_rou}", "Sucesso")
+
+        if constantes.SESSION.get("logged_in"):
+            dlg = wx.MessageDialog(
+                self,
+                "Deseja enviar esta rota ao servidor?",
+                "Sincronizar",
+                style=wx.YES_NO | wx.ICON_QUESTION
+            )
+            if dlg.ShowModal() == wx.ID_YES:
+                result = client.upload(str(arquivo_rou), constantes.SESSION["user_id"])
+                if result.get("success"):
+                    wx.MessageBox("Rota enviada com sucesso ao servidor!", "Servidor")
+                else:
+                    wx.MessageBox(f"Erro ao enviar: {result.get('message')}", "Servidor")
+            dlg.Destroy()
+        else:
+            wx.MessageBox(
+                "Você não está logado.\nUse a opção 'Sincronizar com servidor' no menu inicial para se autenticar antes de enviar rotas.",
+                "Login necessário"
+            )
 
     @staticmethod
     def carregar(pasta: pathlib.Path) -> Rota:

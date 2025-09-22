@@ -5,14 +5,16 @@ from cryptography.fernet import Fernet
 from models import Rota, Elemento
 from editor_frame import EditorRotaFrame
 import constantes
+from sync_dialog import SyncDialog
 
 APPDATA = pathlib.Path.home() / "AppData" / "Roaming" / "lucas_producoes" / "simbus"
 ROUTES_DIR = APPDATA / "routes"
 
+
 class EditorRota(wx.App):
     def OnInit(self):
-        choices = ("Criar nova rota", "Editar rota existente")
-        dlg = wx.SingleChoiceDialog(None, "Escolha uma opção:", f"Editor de Rotas v{constantes.versao}", choices)
+        choices = ("Criar nova rota", "Editar rota existente", "Sincronizar com servidor")
+        dlg = wx.SingleChoiceDialog(None, "Escolha uma opção:", f"Editor de Rotas v{constantes.VERSAO}", choices)
 
         cancel_btn = dlg.FindWindowById(wx.ID_CANCEL)
         if cancel_btn:
@@ -24,7 +26,12 @@ class EditorRota(wx.App):
         dlg.Destroy()
 
         if action == "Criar nova rota":
-            frame = EditorRotaFrame(None, title=f"Criar rota - Editor de Rotas v{constantes.versao}", dados=Rota(), pasta=None)
+            frame = EditorRotaFrame(
+                None,
+                title=f"Criar rota - Editor de Rotas v{constantes.VERSAO}",
+                dados=Rota(),
+                pasta=None
+            )
 
         elif action == "Editar rota existente":
             with wx.DirDialog(None, "Escolha a pasta da rota",
@@ -57,7 +64,19 @@ class EditorRota(wx.App):
                     intervalo_min=d.get("intervalo_min", 0),
                     elementos=[Elemento(**e) for e in d.get("elementos", [])]
                 )
-                frame = EditorRotaFrame(None, title=f"Editar {r.nome_rota} - Editor de Rotas v{constantes.versao}", dados=r, pasta=pasta)
+                frame = EditorRotaFrame(
+                    None,
+                    title=f"Editar {r.nome_rota} - Editor de Rotas v{constantes.VERSAO}",
+                    dados=r,
+                    pasta=pasta
+                )
+
+        elif action == "Sincronizar com servidor":
+            dlg = SyncDialog()
+            dlg.ShowModal()
+            dlg.Destroy()
+            return False
+
         else:
             return False
 
