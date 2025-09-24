@@ -15,16 +15,13 @@ class EditorRota(wx.App):
     def OnInit(self):
         choices = ("Criar nova rota", "Editar rota existente", "Sincronizar com servidor")
         dlg = wx.SingleChoiceDialog(None, "Escolha uma opção:", f"Editor de Rotas v{constantes.VERSAO}", choices)
-
         cancel_btn = dlg.FindWindowById(wx.ID_CANCEL)
         if cancel_btn:
             cancel_btn.SetLabel("Cancelar")
-
         action = None
         if dlg.ShowModal() == wx.ID_OK:
             action = dlg.GetStringSelection()
         dlg.Destroy()
-
         if action == "Criar nova rota":
             frame = EditorRotaFrame(
                 None,
@@ -32,7 +29,6 @@ class EditorRota(wx.App):
                 dados=Rota(),
                 pasta=None
             )
-
         elif action == "Editar rota existente":
             with wx.DirDialog(None, "Escolha a pasta da rota",
                               defaultPath=str(ROUTES_DIR),
@@ -70,15 +66,14 @@ class EditorRota(wx.App):
                     dados=r,
                     pasta=pasta
                 )
-
         elif action == "Sincronizar com servidor":
             dlg = SyncDialog()
-            dlg.ShowModal()
+            result = dlg.ShowModal()
             dlg.Destroy()
+            if result == wx.ID_CANCEL:
+                return self.OnInit()
             return False
-
         else:
             return False
-
         frame.Show()
         return True

@@ -295,16 +295,20 @@ class EditorRotaFrame(wx.Frame):
         self.dados.distancia_p0_pf = float(self.distancia.GetValue() or 0)
         self.dados.tmp_estimado = self.tmp_estimado.GetValue()
         self.dados.intervalo_min = self.intervalo_min.GetValue()
+
         if not self.dados.id_rota or not self.dados.nome_rota:
             wx.MessageBox("ID e Nome da rota não podem estar vazios!", "Erro")
             return
+
         pasta_rota = ROUTES_DIR / self.dados.id_rota
         pasta_rota.mkdir(parents=True, exist_ok=True)
         arquivo_rou = pasta_rota / f"{self.dados.id_rota}.rou"
+
         dados_json = json.dumps(self.dados.to_dict(), indent=2, ensure_ascii=False)
         fernet = Fernet(constantes.FERNET_KEY)
         dados_enc = fernet.encrypt(dados_json.encode()).decode()
         arquivo_rou.write_text(dados_enc, encoding="utf-8")
+
         wx.MessageBox(f"Rota salva em {arquivo_rou}", "Sucesso")
 
         if constantes.SESSION.get("logged_in"):
@@ -315,7 +319,7 @@ class EditorRotaFrame(wx.Frame):
                 style=wx.YES_NO | wx.ICON_QUESTION
             )
             if dlg.ShowModal() == wx.ID_YES:
-                result = client.upload(str(arquivo_rou), constantes.SESSION["user_id"])
+                result = client.upload(str(pasta_rota), constantes.SESSION["user_id"])
                 if result.get("success"):
                     wx.MessageBox("Rota enviada com sucesso ao servidor!", "Servidor")
                 else:
@@ -326,6 +330,12 @@ class EditorRotaFrame(wx.Frame):
                 "Você não está logado.\nUse a opção 'Sincronizar com servidor' no menu inicial para se autenticar antes de enviar rotas.",
                 "Login necessário"
             )
+
+        self.Close()
+        app = wx.GetApp()
+        app.ExitMainLoop()
+        from editor_app import EditorRota
+        EditorRota().MainLoop()
 
     @staticmethod
     def carregar(pasta: pathlib.Path) -> Rota:
