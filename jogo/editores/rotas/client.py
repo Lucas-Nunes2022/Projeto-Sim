@@ -5,11 +5,11 @@ import shutil
 import tempfile
 import zipfile
 
-def register(email, password):
+def register(nome, email, password):
     try:
         r = requests.post(
             f"{constantes.BASE_URL}/register",
-            json={"email": email, "password": password}
+            json={"nome": nome, "email": email, "password": password}
         )
         return r.json()
     except Exception as e:

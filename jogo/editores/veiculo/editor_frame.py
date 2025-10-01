@@ -4,8 +4,9 @@ import json
 from cryptography.fernet import Fernet
 from models import Veiculo, Motor, Sons
 import constantes
+import client
 
-APPDATA = pathlib.Path.home() / "AppData" / "Roaming" / "lucas_producoes" / "simbus"
+APPDATA = pathlib.Path.home() / "AppData" / "Roaming" / "lucas_producoes" / "simbuss"
 VEHICLES_DIR = APPDATA / "vehicles"
 
 LABEL_SONS = {
@@ -179,3 +180,30 @@ class EditorFrame(wx.Frame):
         arquivo_vel = pasta_veiculo / f"{v.id}.vel"
         arquivo_vel.write_text(dados_enc, encoding="utf-8")
         wx.MessageBox(f"Veículo salvo em {arquivo_vel}", "Sucesso")
+
+        # integração servidor
+        if constantes.SESSION.get("logged_in"):
+            if constantes.SESSION.get("role") != "admin":
+                wx.MessageBox(
+                    "Somente administradores podem enviar veículos ao servidor.",
+                    "Permissão negada"
+                )
+            else:
+                dlg = wx.MessageDialog(
+                    self,
+                    "Deseja enviar este veículo ao servidor?",
+                    "Sincronizar",
+                    style=wx.YES_NO | wx.ICON_QUESTION
+                )
+                if dlg.ShowModal() == wx.ID_YES:
+                    result = client.upload(str(pasta_veiculo), constantes.SESSION["user_id"], file_type="vehicles")
+                    if result.get("success"):
+                        wx.MessageBox("Veículo enviado com sucesso ao servidor!", "Servidor")
+                    else:
+                        wx.MessageBox(f"Erro ao enviar: {result.get('message')}", "Servidor")
+                dlg.Destroy()
+        else:
+            wx.MessageBox(
+                "Você não está logado.\nUse a opção 'Sincronizar com servidor' no menu inicial para se autenticar antes de enviar veículos.",
+                "Login necessário"
+            )

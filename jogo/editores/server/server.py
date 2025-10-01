@@ -12,10 +12,10 @@ DB_CONFIG = {
     "host": "127.0.0.1",
     "user": "simbuss",
     "password": "ggmj1&9r",
-    "database": "simbus"
+    "database": "simbuss"
 }
 
-DATA_DIR = "/srv/simbus/data"
+DATA_DIR = "/srv/simbuss/data"
 ROUTES_DIR = os.path.join(DATA_DIR, "routes")
 VEHICLES_DIR = os.path.join(DATA_DIR, "vehicles")
 
@@ -57,9 +57,10 @@ def safe_extract_zip(zip_path, extract_to):
 @app.route("/register", methods=["POST"])
 def register():
     data = request.json
+    nome = data.get("nome")
     email = data.get("email")
     password = data.get("password")
-    if not email or not password:
+    if not nome or not email or not password:
         return jsonify({"success": False, "message": "Dados inválidos"}), 400
 
     conn = get_db()
@@ -71,8 +72,8 @@ def register():
 
     password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     cur.execute(
-        "INSERT INTO users (email, password_hash, role) VALUES (%s, %s, %s)",
-        (email, password_hash, "normal")
+        "INSERT INTO users (nome, email, password_hash, role) VALUES (%s, %s, %s, %s)",
+        (nome, email, password_hash, "normal")
     )
     conn.commit()
     conn.close()
@@ -87,16 +88,22 @@ def login():
 
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT id, password_hash, role FROM users WHERE email=%s", (email,))
+    cur.execute("SELECT id, nome, password_hash, role FROM users WHERE email=%s", (email,))
     row = cur.fetchone()
     conn.close()
 
     if not row:
         return jsonify({"success": False, "message": "Usuário não encontrado"}), 404
 
-    user_id, stored_hash, role = row
+    user_id, nome, stored_hash, role = row
     if bcrypt.checkpw(password.encode(), stored_hash.encode()):
-        return jsonify({"success": True, "message": "Login OK", "role": role, "user_id": user_id})
+        return jsonify({
+            "success": True,
+            "message": "Login OK",
+            "user_id": user_id,
+            "nome": nome,
+            "role": role
+        })
     else:
         return jsonify({"success": False, "message": "Senha incorreta"}), 401
 
@@ -135,11 +142,13 @@ def upload(file_type):
     try:
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT role FROM users WHERE id=%s", (uploaded_by_id,))
+        cur.execute("SELECT role, nome FROM users WHERE id=%s", (uploaded_by_id,))
         row = cur.fetchone()
         if not row or row[0] != "admin":
             conn.close()
             return jsonify({"success": False, "message": "Permissão negada"}), 403
+
+        uploader_name = row[1]
 
         filename = secure_filename(uploaded_file.filename or "")
         if not filename:
@@ -172,11 +181,15 @@ def upload(file_type):
             (filename, file_type[:-1], uploaded_by_id)
         )
         conn.commit()
-        return jsonify({"success": True, "message": f"{filename} salvo e registrado no banco"})
+        return jsonify({
+            "success": True,
+            "message": f"{filename} salvo e registrado no banco",
+            "uploaded_by": {"id": uploaded_by_id, "nome": uploader_name}
+        })
     except pymysql.MySQLError as e:
         if conn:
             conn.rollback()
-        return jsonify({"success": False, "message": f"Erro de banco: {e}"}), 500
+        return jsonify({"success": False, "message": "Erro de banco"}), 500
     finally:
         if conn:
             conn.close()
@@ -189,11 +202,16 @@ def files_db(file_type):
 
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT file_name, uploaded_at FROM files WHERE file_type=%s", (file_type,))
+    cur.execute("""
+        SELECT f.file_name, f.uploaded_at, u.nome
+        FROM files f
+        LEFT JOIN users u ON f.uploaded_by = u.id
+        WHERE f.file_type=%s
+    """, (file_type,))
     rows = cur.fetchall()
     conn.close()
 
-    files = [{"file_name": r[0], "uploaded_at": str(r[1])} for r in rows]
+    files = [{"file_name": r[0], "uploaded_at": str(r[1]), "uploaded_by": r[2]} for r in rows]
     return jsonify({"success": True, "files": files})
 
 

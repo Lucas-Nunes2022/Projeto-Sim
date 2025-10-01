@@ -6,7 +6,7 @@ from models import Rota, Elemento
 import constantes
 import client
 
-APPDATA = pathlib.Path.home() / "AppData" / "Roaming" / "lucas_producoes" / "simbus"
+APPDATA = pathlib.Path.home() / "AppData" / "Roaming" / "lucas_producoes" / "simbuss"
 ROUTES_DIR = APPDATA / "routes"
 VEHICLES_DIR = APPDATA / "vehicles"
 
@@ -312,19 +312,26 @@ class EditorRotaFrame(wx.Frame):
         wx.MessageBox(f"Rota salva em {arquivo_rou}", "Sucesso")
 
         if constantes.SESSION.get("logged_in"):
-            dlg = wx.MessageDialog(
-                self,
-                "Deseja enviar esta rota ao servidor?",
-                "Sincronizar",
-                style=wx.YES_NO | wx.ICON_QUESTION
-            )
-            if dlg.ShowModal() == wx.ID_YES:
-                result = client.upload(str(pasta_rota), constantes.SESSION["user_id"])
-                if result.get("success"):
-                    wx.MessageBox("Rota enviada com sucesso ao servidor!", "Servidor")
-                else:
-                    wx.MessageBox(f"Erro ao enviar: {result.get('message')}", "Servidor")
-            dlg.Destroy()
+            # checa se é admin antes de oferecer upload
+            if constantes.SESSION.get("role") != "admin":
+                wx.MessageBox(
+                    "Somente administradores podem enviar rotas ao servidor.",
+                    "Permissão negada"
+                )
+            else:
+                dlg = wx.MessageDialog(
+                    self,
+                    "Deseja enviar esta rota ao servidor?",
+                    "Sincronizar",
+                    style=wx.YES_NO | wx.ICON_QUESTION
+                )
+                if dlg.ShowModal() == wx.ID_YES:
+                    result = client.upload(str(pasta_rota), constantes.SESSION["user_id"])
+                    if result.get("success"):
+                        wx.MessageBox("Rota enviada com sucesso ao servidor!", "Servidor")
+                    else:
+                        wx.MessageBox(f"Erro ao enviar: {result.get('message')}", "Servidor")
+                dlg.Destroy()
         else:
             wx.MessageBox(
                 "Você não está logado.\nUse a opção 'Sincronizar com servidor' no menu inicial para se autenticar antes de enviar rotas.",
@@ -336,15 +343,3 @@ class EditorRotaFrame(wx.Frame):
         app.ExitMainLoop()
         from editor_app import EditorRota
         EditorRota().MainLoop()
-
-    @staticmethod
-    def carregar(pasta: pathlib.Path) -> Rota:
-        rou_files = list(pasta.glob("*.rou"))
-        if not rou_files:
-            raise FileNotFoundError("Nenhum arquivo .rou encontrado na pasta da rota")
-        caminho = rou_files[0]
-        dados_enc = caminho.read_text(encoding="utf-8")
-        fernet = Fernet(constantes.FERNET_KEY)
-        dados_json = fernet.decrypt(dados_enc.encode()).decode()
-        d = json.loads(dados_json)
-        return Rota(**d)

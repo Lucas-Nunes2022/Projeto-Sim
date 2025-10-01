@@ -7,7 +7,7 @@ from editor_frame import EditorRotaFrame
 import constantes
 from sync_dialog import SyncDialog
 
-APPDATA = pathlib.Path.home() / "AppData" / "Roaming" / "lucas_producoes" / "simbus"
+APPDATA = pathlib.Path.home() / "AppData" / "Roaming" / "lucas_producoes" / "simbuss"
 ROUTES_DIR = APPDATA / "routes"
 
 

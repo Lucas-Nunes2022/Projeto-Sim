@@ -5,14 +5,26 @@ from cryptography.fernet import Fernet
 from models import Veiculo, Motor, Sons
 from editor_frame import EditorFrame
 import constantes
+from sync_dialog import SyncDialog
 
-APPDATA = pathlib.Path.home() / "AppData" / "Roaming" / "lucas_producoes" / "simbus"
+APPDATA = pathlib.Path.home() / "AppData" / "Roaming" / "lucas_producoes" / "simbuss"
 VEHICLES_DIR = APPDATA / "vehicles"
+VEHICLES_DIR.mkdir(parents=True, exist_ok=True)
+
 
 class Editor(wx.App):
     def OnInit(self):
-        choices = ("Criar novo veículo", "Editar veículo existente")
-        dlg = wx.SingleChoiceDialog(None, "Escolha uma opção:", f"Editor de Veículos v{constantes.versao}", choices)
+        choices = (
+            "Criar novo veículo",
+            "Editar veículo existente",
+            "Sincronizar com servidor"
+        )
+        dlg = wx.SingleChoiceDialog(
+            None,
+            "Escolha uma opção:",
+            f"Editor de Veículos v{constantes.VERSAO}",
+            choices
+        )
 
         cancel_btn = dlg.FindWindowById(wx.ID_CANCEL)
         if cancel_btn:
@@ -24,12 +36,20 @@ class Editor(wx.App):
         dlg.Destroy()
 
         if action == "Criar novo veículo":
-            frame = EditorFrame(None, title=f"Criar veículo - Editor de Veículos v{constantes.versao}", dados=Veiculo(), pasta=None)
+            frame = EditorFrame(
+                None,
+                title=f"Criar veículo - Editor de Veículos v{constantes.VERSAO}",
+                dados=Veiculo(),
+                pasta=None
+            )
 
         elif action == "Editar veículo existente":
-            with wx.DirDialog(None, "Escolha a pasta do veículo",
-                              defaultPath=str(VEHICLES_DIR),
-                              style=wx.DD_DIR_MUST_EXIST) as dirDialog:
+            with wx.DirDialog(
+                None,
+                "Escolha a pasta do veículo",
+                defaultPath=str(VEHICLES_DIR),
+                style=wx.DD_DIR_MUST_EXIST
+            ) as dirDialog:
                 if dirDialog.ShowModal() == wx.ID_CANCEL:
                     return False
                 pasta = pathlib.Path(dirDialog.GetPath())
@@ -43,23 +63,23 @@ class Editor(wx.App):
                 dados_json = fernet.decrypt(dados_enc.encode()).decode()
                 d = json.loads(dados_json)
                 v = Veiculo(
-                    id=d.get("id",""),
-                    nome=d.get("nome",""),
-                    fabricante=d.get("fabricante",""),
-                    ano=d.get("ano",0),
-                    tipo=d.get("tipo",""),
-                    cambio=d.get("cambio",""),
-                    qtd_marchas=d.get("qtd_marchas",0),
-                    comprimento_m=d.get("comprimento_m",0),
-                    portas=d.get("portas",0),
-                    capacidade=d.get("capacidade",0),
-                    peso=d.get("peso",0),
-                    altura=d.get("altura",0),
-                    largura=d.get("largura",0),
-                    cap_tanque=d.get("cap_tanque",0),
-                    qtd_eixos=d.get("qtd_eixos",0),
-                    motor=Motor(**d.get("motor",{})),
-                    sons=Sons(**d.get("sons",{}))
+                    id=d.get("id", ""),
+                    nome=d.get("nome", ""),
+                    fabricante=d.get("fabricante", ""),
+                    ano=d.get("ano", 0),
+                    tipo=d.get("tipo", ""),
+                    cambio=d.get("cambio", ""),
+                    qtd_marchas=d.get("qtd_marchas", 0),
+                    comprimento_m=d.get("comprimento_m", 0),
+                    portas=d.get("portas", 0),
+                    capacidade=d.get("capacidade", 0),
+                    peso=d.get("peso", 0),
+                    altura=d.get("altura", 0),
+                    largura=d.get("largura", 0),
+                    cap_tanque=d.get("cap_tanque", 0),
+                    qtd_eixos=d.get("qtd_eixos", 0),
+                    motor=Motor(**d.get("motor", {})),
+                    sons=Sons(**d.get("sons", {}))
                 )
                 pasta_sons = pasta / "sounds"
                 if pasta_sons.exists():
@@ -67,7 +87,21 @@ class Editor(wx.App):
                         if val:
                             setattr(v.sons, attr, str(pasta_sons / val))
 
-                frame = EditorFrame(None, title=f"Editar {v.nome} - Editor de Veículos v{constantes.versao}", dados=v, pasta=pasta)
+                frame = EditorFrame(
+                    None,
+                    title=f"Editar {v.nome} - Editor de Veículos v{constantes.VERSAO}",
+                    dados=v,
+                    pasta=pasta
+                )
+
+        elif action == "Sincronizar com servidor":
+            dlg = SyncDialog(file_type="vehicles")
+            result = dlg.ShowModal()
+            dlg.Destroy()
+            if result == wx.ID_CANCEL:
+                return self.OnInit()
+            return False
+
         else:
             return False
 

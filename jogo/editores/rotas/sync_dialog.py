@@ -3,7 +3,7 @@ import client
 import constantes
 import pathlib
 
-APPDATA = pathlib.Path.home() / "AppData" / "Roaming" / "lucas_producoes" / "simbus"
+APPDATA = pathlib.Path.home() / "AppData" / "Roaming" / "lucas_producoes" / "simbuss"
 ROUTES_DIR = APPDATA / "routes"
 VEHICLES_DIR = APPDATA / "vehicles"
 ROUTES_DIR.mkdir(parents=True, exist_ok=True)
@@ -74,6 +74,10 @@ class SyncDialog(wx.Dialog):
 
     def build_register(self):
         sizer = wx.BoxSizer(wx.VERTICAL)
+        lbl_nome = wx.StaticText(self.panel_register, label="Nome:")
+        self.register_nome = wx.TextCtrl(self.panel_register)
+        sizer.Add(lbl_nome, 0, wx.ALL, 5)
+        sizer.Add(self.register_nome, 0, wx.EXPAND | wx.ALL, 5)
         lbl_email = wx.StaticText(self.panel_register, label="E-mail:")
         self.register_email = wx.TextCtrl(self.panel_register)
         sizer.Add(lbl_email, 0, wx.ALL, 5)
@@ -125,16 +129,18 @@ class SyncDialog(wx.Dialog):
             "logged_in": True,
             "user_id": result.get("user_id"),
             "role": result.get("role"),
+            "nome": result.get("nome"),
             "email": email
         })
-        wx.MessageBox("Login bem-sucedido", "Sucesso")
+        wx.MessageBox(f"Bem-vindo, {result.get('nome')}!", "Sucesso")
         self.show_panel(self.panel_files)
         self.load_files()
 
     def on_register(self, event):
+        nome = self.register_nome.GetValue().strip()
         email = self.register_email.GetValue().strip()
         senha = self.register_password.GetValue().strip()
-        result = client.register(email, senha)
+        result = client.register(nome, email, senha)
         if result.get("success"):
             login_result = client.login(email, senha)
             if login_result.get("success"):
@@ -142,9 +148,10 @@ class SyncDialog(wx.Dialog):
                     "logged_in": True,
                     "user_id": login_result.get("user_id"),
                     "role": login_result.get("role"),
+                    "nome": login_result.get("nome"),
                     "email": email
                 })
-                wx.MessageBox("Conta criada e login bem-sucedido", "Sucesso")
+                wx.MessageBox(f"Conta criada e login bem-sucedido. Bem-vindo, {nome}!", "Sucesso")
                 self.show_panel(self.panel_files)
                 self.load_files()
             else:
